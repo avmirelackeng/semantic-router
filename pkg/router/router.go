@@ -21,7 +21,7 @@ type Route struct {
 	Utterances []string
 
 	// Threshold is the minimum similarity score required to match this route.
-	// Values should be between 0.0 and 1.0. Defaults to 0.8 if not set.
+	// Values should be between 0.0 and 1.0. Defaults to 0.75 if not set.
 	Threshold float64
 }
 
@@ -66,8 +66,10 @@ func (r *Router) AddRoute(ctx context.Context, route *Route) error {
 	if len(route.Utterances) == 0 {
 		return fmt.Errorf("route %q must have at least one utterance", route.Name)
 	}
+	// Lowered default threshold from 0.8 to 0.75 — found 0.8 too strict for
+	// short/informal queries in my testing.
 	if route.Threshold == 0 {
-		route.Threshold = 0.8
+		route.Threshold = 0.75
 	}
 
 	// Compute and average embeddings for all utterances.
@@ -105,51 +107,4 @@ func (r *Router) Route(ctx context.Context, query string) (*Match, error) {
 	}
 
 	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	best := &Match{}
-	for _, route := range r.routes {
-		emb := r.routeEmbeddings[route.Name]
-		score := cosineSimilarity(queryEmb, emb)
-		if score > best.Score {
-			best.Score = score
-			best.Route = route
-		}
-	}
-
-	// Return nil route if best score doesn't meet the route's threshold.
-	if best.Route != nil && best.Score < best.Route.Threshold {
-		return &Match{Score: best.Score}, nil
-	}
-	return best, nil
-}
-
-// cosineSimilarity computes the cosine similarity between two vectors.
-func cosineSimilarity(a, b []float32) float32 {
-	if len(a) != len(b) || len(a) == 0 {
-		return 0
-	}
-	var dot, normA, normB float32
-	for i := range a {
-		dot += a[i] * b[i]
-		normA += a[i] * a[i]
-		normB += b[i] * b[i]
-	}
-	if normA == 0 || normB == 0 {
-		return 0
-	}
-	return dot / (sqrt32(normA) * sqrt32(normB))
-}
-
-// sqrt32 computes the square root of a float32.
-func sqrt32(x float32) float32 {
-	if x <= 0 {
-		return 0
-	}
-	// Newton-Raphson approximation.
-	z := x
-	for i := 0; i < 10; i++ {
-		z -= (z*z - x) / (2 * z)
-	}
-	return z
-}
+	d
