@@ -47,7 +47,13 @@ func main() {
 			Level: slog.LevelDebug,
 		})))
 		// Also log the loaded config summary in debug mode for easier local dev.
-		slog.Debug("configuration loaded", "host", cfg.Host, "port", cfg.Port)
+		// Personal note: also printing listen address here saves me a scroll when
+		// tailing logs during local testing.
+		slog.Debug("configuration loaded",
+			"host", cfg.Host,
+			"port", cfg.Port,
+			"address", fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
+		)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
