@@ -81,5 +81,8 @@ func main() {
 	// NOTE: srv.Run blocks until ctx is cancelled, so reaching here means a
 	// clean shutdown completed. Log before returning so the process manager
 	// (e.g. systemd) can capture the final message before the process exits.
+	// Using os.Exit(0) explicitly here to make the exit code clear when tailing
+	// logs alongside non-zero exits from the error path above.
 	slog.Info("server shutdown complete")
+	os.Exit(0)
 }
