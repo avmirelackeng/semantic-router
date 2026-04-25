@@ -1,0 +1,78 @@
+// Package main is the entry point for the semantic-router service.
+// semantic-router is a fork of vllm-project/semantic-router that provides
+// intelligent request routing based on semantic similarity.
+package main
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/semantic-router/semantic-router/internal/config"
+	"github.com/semantic-router/semantic-router/internal/server"
+)
+
+var (
+	// Version is set at build time via ldflags.
+	Version = "dev"
+	// Commit is set at build time via ldflags.
+	Commit = "none"
+	// BuildDate is set at build time via ldflags.
+	BuildDate = "unknown"
+)
+
+func main() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+	slog.SetDefault(logger)
+
+	slog.Info("starting semantic-router",
+		"version", Version,
+		"commit", Commit,
+		"build_date", BuildDate,
+	)
+
+	cfg, err := config.Load()
+	if err != nil {
+		slog.Error("failed to load configuration", "error", err)
+		os.Exit(1)
+	}
+
+	if cfg.Debug {
+		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	srv, err := server.New(cfg)
+	if err != nil {
+		slog.Error("failed to initialize server", "error", err)
+		os.Exit(1)
+	}
+
+	// Handle graceful shutdown on SIGINT or SIGTERM.
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <-quit
+		slog.Info("received shutdown signal", "signal", sig.String())
+		cancel()
+	}()
+
+	slog.Info("server listening", "address", fmt.Sprintf("%s:%d", cfg.Host, cfg.Port))
+
+	if err := srv.Run(ctx); err != nil {
+		slog.Error("server exited with error", "error", err)
+		os.Exit(1)
+	}
+
+	slog.Info("server shutdown complete")
+}
