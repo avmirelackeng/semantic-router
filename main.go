@@ -46,6 +46,8 @@ func main() {
 		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 			Level: slog.LevelDebug,
 		})))
+		// Also log the loaded config summary in debug mode for easier local dev.
+		slog.Debug("configuration loaded", "host", cfg.Host, "port", cfg.Port)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
