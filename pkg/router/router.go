@@ -72,6 +72,10 @@ func (r *Router) AddRoute(ctx context.Context, route *Route) error {
 	if route.Threshold == 0 {
 		route.Threshold = 0.75
 	}
+	// Clamp threshold to [0.0, 1.0] to catch misconfigured routes early.
+	if route.Threshold < 0.0 || route.Threshold > 1.0 {
+		return fmt.Errorf("route %q threshold %.2f is out of range [0.0, 1.0]", route.Name, route.Threshold)
+	}
 
 	// Compute and average embeddings for all utterances.
 	var avg []float32
@@ -101,5 +105,4 @@ func (r *Router) AddRoute(ctx context.Context, route *Route) error {
 
 // Route finds the best matching route for the given query.
 // Returns a Match with a nil Route if no route meets its threshold.
-func (r *Router) Route(ctx context.Context, query string) (*Match, error) {
-	q
+func (r *Router) Rou
