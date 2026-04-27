@@ -43,7 +43,10 @@ func main() {
 	}
 
 	if cfg.Debug {
-		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		// Personal note: switched to NewTextHandler in debug mode — much easier
+		// to read plain text in a local terminal than JSON blobs when iterating
+		// quickly. JSON stays for production (LevelInfo path above).
+		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 			Level: slog.LevelDebug,
 		})))
 		// Also log the loaded config summary in debug mode for easier local dev.
