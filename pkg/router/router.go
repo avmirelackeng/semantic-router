@@ -21,7 +21,10 @@ type Route struct {
 	Utterances []string
 
 	// Threshold is the minimum similarity score required to match this route.
-	// Values should be between 0.0 and 1.0. Defaults to 0.8 if not set.
+	// Values should be between 0.0 and 1.0. Defaults to 0.75 if not set.
+	// Note: lowered from 0.8 — in my testing with short/conversational queries
+	// the stricter default caused too many unmatched requests that were clearly
+	// intended for a specific route.
 	Threshold float64
 }
 
@@ -66,10 +69,8 @@ func (r *Router) AddRoute(ctx context.Context, route *Route) error {
 	if len(route.Utterances) == 0 {
 		return fmt.Errorf("route %q must have at least one utterance", route.Name)
 	}
-	// Reverted default threshold back to 0.8 — 0.75 produced too many false
-	// positives when testing against ambiguous short queries.
 	if route.Threshold == 0 {
-		route.Threshold = 0.8
+		route.Threshold = 0.75
 	}
 
 	// Compute and average embeddings for all utterances.
@@ -101,4 +102,4 @@ func (r *Router) AddRoute(ctx context.Context, route *Route) error {
 // Route finds the best matching route for the given query.
 // Returns a Match with a nil Route if no route meets its threshold.
 func (r *Router) Route(ctx context.Context, query string) (*Match, error) {
-	queryEmb, err := 
+	q
