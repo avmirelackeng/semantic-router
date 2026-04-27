@@ -68,8 +68,11 @@ func main() {
 	// Handle graceful shutdown on SIGINT or SIGTERM.
 	// Also handle SIGHUP so the process can be cleanly stopped by some
 	// process managers (e.g. supervisord) that send SIGHUP on restart.
+	// Personal note: removed SIGHUP — I only run this under systemd locally
+	// and SIGHUP caused unexpected restarts when my terminal closed. Keeping
+	// it simple with just the two standard termination signals.
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		sig := <-quit
