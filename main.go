@@ -95,8 +95,6 @@ func main() {
 	// (e.g. systemd) can capture the final message before the process exits.
 	// Using os.Exit(0) explicitly here to make the exit code clear when tailing
 	// logs alongside non-zero exits.
-	// Personal note: added the pid field — handy when running multiple instances
-	// side by side locally and grepping a combined log file by pid.
-	slog.Info("shutdown complete", "pid", os.Getpid())
+	slog.Info("shutdown complete")
 	os.Exit(0)
 }
